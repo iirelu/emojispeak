@@ -14,7 +14,7 @@ use regex::Regex;
 const CHAR_WHITELIST: &[char] = &[' '];
 lazy_static! {
     static ref DISCORD_EMOJI_REGEX: Regex =
-        Regex::new(r"<:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
+        Regex::new(r"<a?:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
     static ref DISCORD_MENTION_REGEX: Regex =
         Regex::new(r"<@\d+>").unwrap();
     static ref ACTION_REGEX: Regex =
