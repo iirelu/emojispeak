@@ -11,7 +11,6 @@ use serenity::model::id::{ChannelId, UserId};
 use unic_emoji_char::is_emoji;
 use regex::Regex;
 
-const DISCORD_TOKEN: &str = "NDUxNDU5NTcwOTkzNDYzMjk3.DfCGkw.7T-NxcfPrcudVoILLbMElMrsHwY";
 const CHAR_WHITELIST: &[char] = &[' '];
 lazy_static! {
     static ref DISCORD_EMOJI_REGEX: Regex =
@@ -25,7 +24,9 @@ lazy_static! {
 }
 
 fn main() -> Result<(), serenity::Error> {
-    let mut client = Client::new(DISCORD_TOKEN, Handler)?;
+    let token = std::env::var("DISCORD_TOKEN")
+        .expect("Environment variable DISCORD_TOKEN is not set");
+    let mut client = Client::new(&token, Handler)?;
     client.start()?;
     Ok(())
 }
