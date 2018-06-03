@@ -11,7 +11,7 @@ use serenity::model::id::{ChannelId, UserId};
 use unic_emoji_char::is_emoji;
 use regex::Regex;
 
-const CHAR_WHITELIST: &[char] = &[' '];
+const CHAR_WHITELIST: &[char] = &['\u{200d}', '\u{fe0f}'];
 lazy_static! {
     static ref DISCORD_EMOJI_REGEX: Regex =
         Regex::new(r"<a?:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
@@ -79,7 +79,7 @@ fn is_emojispeech(string: &str) -> bool {
     let string = DISCORD_MENTION_REGEX.replace_all(&string, "");
     let string = URL_REGEX.replace_all(&string, "");
     for chr in string.chars() {
-        if is_emoji(chr) || CHAR_WHITELIST.contains(&chr) {
+        if is_emoji(chr) || CHAR_WHITELIST.contains(&chr) || chr.is_whitespace() {
             continue;
         } else {
             return false;
