@@ -7,6 +7,7 @@ use serenity::prelude::*;
 use serenity::model::channel::Message;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::guild::Guild;
+use serenity::model::id::{ChannelId, UserId};
 use unic_emoji_char::is_emoji;
 use regex::Regex;
 
@@ -39,7 +40,7 @@ impl EventHandler for Handler {
     }
 
     fn message(&self, _: Context, msg: Message) {
-        if has_role(&msg, "emojispeaker") {
+        if has_role(msg.channel_id, msg.author.id, "emojispeaker") {
             println!("emojispeaker message from {}: {}",
                 msg.author.name,
                 msg.content);
@@ -50,53 +51,28 @@ impl EventHandler for Handler {
     }
 
     fn message_update(&self, _: Context, msg: MessageUpdateEvent) {
-        // urgh, have to redo all the has_role logic because different interface
-        let has_role = || {
-            let msg = msg.clone();
-            let cache = &serenity::CACHE;
-            let guild = {
-                // it seriously does not work unless i do this one by one. wtf
-                let g = cache.read().guild_channel(msg.channel_id)?;
-                let g = g.read();
-                g.guild_id
-            };
-            for role_id in cache.read().member(guild, msg.author?.id)?.roles {
-                if cache.read().role(guild, role_id)?.name == "emojispeaker" {
-                    return Some(true);
+        (|| {
+            if has_role(msg.channel_id, msg.author?.id, "emojispeaker") {
+                println!("emojispeaker edited message: {:?}", msg.content);
+                if !is_emojispeech(&msg.content?) {
+                    let _ = msg.channel_id.delete_message(msg.id);
                 }
             }
-            Some(false)
-        };
-        match (has_role(), &msg.content) {
-            (Some(true), Some(content)) => {
-                if !is_emojispeech(&content) {
-                    if let Some(channel) = serenity::CACHE.read()
-                        .guild_channel(msg.channel_id)
-                    {
-                        let _ = channel.read().delete_messages(&[msg.id]);
-                    }
-                }
-            }
-            (_, _) => (),
-        }
+            Some(())
+        })();
     }
 }
 
-fn has_role(msg: &Message, role_name: &str) -> bool {
-    let guild = match msg.guild() {
-        Some(guild) => guild,
+fn has_role(channel_id: ChannelId, user_id: UserId, role_name: &str) -> bool {
+    let guild_id = match serenity::CACHE.read().guild_channel(channel_id) {
+        Some(g) => g.read().guild_id,
         None => return false,
     };
-    if let Some(member) = msg.member() {
-        for role_id in &member.roles {
-            if let Some(role) = guild.read().roles.get(&role_id) {
-                if role.name == role_name {
-                    return true;
-                }
-            }
-        }
-    };
-    false
+    guild_id.member(user_id).ok()
+        .and_then(|member| Some(member.roles()?.iter()
+            .filter(|role| role.name == role_name)
+            .count() > 0))
+        .unwrap_or(false)
 }
 
 fn is_emojispeech(string: &str) -> bool {
