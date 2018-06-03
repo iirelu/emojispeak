@@ -1,0 +1,10 @@
+[package]
+name = "emojispeak"
+version = "0.1.0"
+authors = ["iirelu <anna@bawk.space>"]
+
+[dependencies]
+serenity = "0.5.3"
+unic-emoji-char = "0.7.0"
+regex = "1.0.0"
+lazy_static = "1.0.1"
