@@ -15,6 +15,8 @@ const CHAR_WHITELIST: &[char] = &[' '];
 lazy_static! {
     static ref DISCORD_EMOJI_REGEX: Regex =
         Regex::new(r"<:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
+    static ref DISCORD_MENTION_REGEX: Regex =
+        Regex::new(r"<@\d+>").unwrap();
     static ref ACTION_REGEX: Regex =
         Regex::new(r"\*.*?\*|_.*?_").unwrap();
     static ref URL_REGEX: Regex =
@@ -99,6 +101,7 @@ fn has_role(msg: &Message, role_name: &str) -> bool {
 
 fn is_emojispeech(string: &str) -> bool {
     let string = DISCORD_EMOJI_REGEX.replace_all(string, "");
+    let string = DISCORD_MENTION_REGEX.replace_all(&string, "");
     let string = ACTION_REGEX.replace_all(&string, "");
     let string = URL_REGEX.replace_all(&string, "");
     for chr in string.chars() {
