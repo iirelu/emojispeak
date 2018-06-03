@@ -17,8 +17,6 @@ lazy_static! {
         Regex::new(r"<a?:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
     static ref DISCORD_MENTION_REGEX: Regex =
         Regex::new(r"<@\d+>").unwrap();
-    static ref ACTION_REGEX: Regex =
-        Regex::new(r"\*.*?\*|_.*?_").unwrap();
     static ref URL_REGEX: Regex =
         Regex::new(r"https?://\S+").unwrap();
 }
@@ -79,7 +77,6 @@ fn has_role(channel_id: ChannelId, user_id: UserId, role_name: &str) -> bool {
 fn is_emojispeech(string: &str) -> bool {
     let string = DISCORD_EMOJI_REGEX.replace_all(string, "");
     let string = DISCORD_MENTION_REGEX.replace_all(&string, "");
-    let string = ACTION_REGEX.replace_all(&string, "");
     let string = URL_REGEX.replace_all(&string, "");
     for chr in string.chars() {
         if is_emoji(chr) || CHAR_WHITELIST.contains(&chr) {
