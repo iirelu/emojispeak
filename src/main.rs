@@ -11,12 +11,22 @@ use serenity::model::id::{ChannelId, UserId};
 use unic_emoji_char::is_emoji;
 use regex::Regex;
 
-const CHAR_WHITELIST: &[char] = &['\u{200d}', '\u{fe0f}'];
+const CHAR_WHITELIST: &[char] = &[
+    '\u{200d}', // Zero-Width Joiner, used in combining emojis
+    '\u{fe0f}', // Variation Selector-16, used in combining emojis
+];
 lazy_static! {
+    // Discord emojis are in the form of <:emoji_name:emoji_id>, or in
+    // the case of animated emojis, <a:emoji_name:emoji_id>.
+    // emoji_name is alphanumeric and underscores, and emoji_id
+    // is a number.
     static ref DISCORD_EMOJI_REGEX: Regex =
         Regex::new(r"<a?:[a-zA-Z0-9_]+:[0-9]+>").unwrap();
+    // Discord mentions are in the form of <@user_id>, where user_id
+    // is a number.
     static ref DISCORD_MENTION_REGEX: Regex =
         Regex::new(r"<@\d+>").unwrap();
+    // Don't need a fancy url regex, just basic detection.
     static ref URL_REGEX: Regex =
         Regex::new(r"https?://\S+").unwrap();
 }
