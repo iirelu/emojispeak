@@ -6,10 +6,11 @@ extern crate regex;
 use serenity::prelude::*;
 use serenity::model::channel::Message;
 use serenity::model::event::MessageUpdateEvent;
-use serenity::model::guild::Guild;
-use serenity::model::id::{ChannelId, UserId};
+use serenity::model::guild::{Guild, PartialGuild};
+use serenity::model::id::{ChannelId, UserId, GuildId};
 use unic_emoji_char::is_emoji;
 use regex::Regex;
+use std::sync::Arc;
 
 const CHAR_WHITELIST: &[char] = &[
     '\u{200d}', // Zero-Width Joiner, used in combining emojis
@@ -69,6 +70,20 @@ impl EventHandler for Handler {
             }
             Some(())
         })();
+    }
+
+    fn guild_unavailable(&self, _: Context, g: GuildId) {
+        println!("warning! a guild is unavailable! name: '{}'",
+            g.find().map(|g| g.read().name.clone()).unwrap_or("unknown".into()));
+    }
+
+    fn guild_delete(
+        &self,
+        _: Context,
+        g: PartialGuild,
+        _: Option<Arc<RwLock<Guild>>>)
+    {
+        println!("removed from guild! name: '{}'", g.name);
     }
 }
 
