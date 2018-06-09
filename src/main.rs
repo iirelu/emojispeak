@@ -1,16 +1,17 @@
+extern crate regex;
 extern crate serenity;
 extern crate unic_emoji_char;
-extern crate regex;
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
-use serenity::prelude::*;
+use regex::Regex;
 use serenity::model::channel::Message;
 use serenity::model::event::MessageUpdateEvent;
 use serenity::model::guild::{Guild, PartialGuild};
-use serenity::model::id::{ChannelId, UserId, GuildId};
-use unic_emoji_char::is_emoji;
-use regex::Regex;
+use serenity::model::id::{ChannelId, GuildId, UserId};
+use serenity::prelude::*;
 use std::sync::Arc;
+use unic_emoji_char::is_emoji;
 
 const CHAR_WHITELIST: &[char] = &[
     '\u{200d}', // Zero-Width Joiner, used in combining emojis
@@ -33,8 +34,7 @@ lazy_static! {
 }
 
 fn main() -> Result<(), serenity::Error> {
-    let token = std::env::var("DISCORD_TOKEN")
-        .expect("Environment variable DISCORD_TOKEN is not set");
+    let token = std::env::var("DISCORD_TOKEN").expect("$DISCORD_TOKEN is not set");
     let mut client = Client::new(&token, Handler)?;
     client.start()?;
     Ok(())
@@ -44,16 +44,18 @@ struct Handler;
 
 impl EventHandler for Handler {
     fn guild_create(&self, _: Context, guild: Guild, _: bool) {
-        println!("connected to guild! name: '{}', members: {}",
-            guild.name,
-            guild.member_count);
+        println!(
+            "connected to guild! name: '{}', members: {}",
+            guild.name, guild.member_count
+        );
     }
 
     fn message(&self, _: Context, msg: Message) {
         if has_role(msg.channel_id, msg.author.id, "emojispeaker") {
-            println!("emojispeaker message from {}: {}",
-                msg.author.name,
-                msg.content);
+            println!(
+                "emojispeaker message from {}: {}",
+                msg.author.name, msg.content
+            );
             if !is_emojispeech(&msg.content) {
                 let _ = msg.delete();
             }
@@ -73,16 +75,15 @@ impl EventHandler for Handler {
     }
 
     fn guild_unavailable(&self, _: Context, g: GuildId) {
-        println!("warning! a guild is unavailable! name: '{}'",
-            g.find().map(|g| g.read().name.clone()).unwrap_or("unknown".into()));
+        println!(
+            "warning! a guild is unavailable! name: '{}'",
+            g.find()
+                .map(|g| g.read().name.clone())
+                .unwrap_or("unknown".into())
+        );
     }
 
-    fn guild_delete(
-        &self,
-        _: Context,
-        g: PartialGuild,
-        _: Option<Arc<RwLock<Guild>>>)
-    {
+    fn guild_delete(&self, _: Context, g: PartialGuild, _: Option<Arc<RwLock<Guild>>>) {
         println!("removed from guild! name: '{}'", g.name);
     }
 }
@@ -92,10 +93,18 @@ fn has_role(channel_id: ChannelId, user_id: UserId, role_name: &str) -> bool {
         Some(g) => g.read().guild_id,
         None => return false,
     };
-    guild_id.member(user_id).ok()
-        .and_then(|member| Some(member.roles()?.iter()
-            .filter(|role| role.name == role_name)
-            .count() > 0))
+    guild_id
+        .member(user_id)
+        .ok()
+        .and_then(|member| {
+            Some(
+                member
+                    .roles()?
+                    .iter()
+                    .filter(|role| role.name == role_name)
+                    .count() > 0,
+            )
+        })
         .unwrap_or(false)
 }
 
